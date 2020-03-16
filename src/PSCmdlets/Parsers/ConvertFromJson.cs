@@ -21,34 +21,37 @@
 
 using System;
 using System.Management.Automation;
-using Lib;
+using Newtonsoft.Json.Linq;
+using Lib.ExtensionMethods;
 
-namespace PSCmdlets
-{
+namespace PSCmdlets {
     [Cmdlet(VerbsData.Convert, "FromJson")]
     [OutputType(typeof(object))]
-    public class ConvertFromJson : Cmdlet
-    {
+    public class ConvertFromJson : Cmdlet {
         [Parameter(Position = 1, Mandatory = true, ValueFromPipeline = true)]
         public string JsonString { get; set; }
 
-        
-        protected override void BeginProcessing()
-        {
+        protected override void BeginProcessing() {
             base.BeginProcessing();
         }
 
-        protected override void ProcessRecord()
-        {
-            try
-            {
-                WriteObject((object)Parse.ConvertFromJson(JsonString));
+        protected override void ProcessRecord() {
+            try {
+
+
+                if (JsonString.Like("[*]")) {
+                    foreach (var obj in JArray.Parse(JsonString)) {
+                        WriteObject(obj);
+                    }
+                }
+
+                if (JsonString.Like("{*}")) {
+                    WriteObject(JObject.Parse(JsonString));
+                }
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 WriteObject("ERR: " + ex.Message.ToString());
             }
-            
         }
     }
 }

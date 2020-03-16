@@ -19,36 +19,74 @@
  * THIS SOFTWARE.
  */
 
+/*
+ * https://www.newtonsoft.com/json/help/html/CustomJsonConverter.htm
+ */
+
 using System;
 using System.Management.Automation;
-using Lib;
+using System.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
-namespace PSCmdlets
-{
+namespace PSCmdlets {
     [Cmdlet(VerbsData.Convert, "ToJson")]
-    [OutputType(typeof(object))]
-    public class ConvertToJson : Cmdlet
-    {
+    [OutputType(typeof(string))]
+    public class ConvertToJson : Cmdlet {
         [Parameter(Position = 1, Mandatory = true, ValueFromPipeline = true)]
-        public object JsonObject { get; set; }
+        public PSObject psObj { get; set; }
 
         
-        protected override void BeginProcessing()
-        {
+        protected override void BeginProcessing() {
             base.BeginProcessing();
         }
 
-        protected override void ProcessRecord()
-        {
-            try
-            {
-                WriteObject((object)Parse.ConvertToJson(JsonObject));
+        protected override void ProcessRecord() {
+            try {
+                string json = JsonConvert.SerializeObject(psObj, Formatting.Indented, new PSObjectJsonConverter(typeof(PSObject)));
+                WriteObject(json);
             }
             catch (Exception ex)
             {
                 WriteObject("ERR: " + ex.Message.ToString());
             }
-            
+        }
+    }
+
+    public class PSObjectJsonConverter : JsonConverter {
+
+        private readonly Type[] _types;
+
+        public PSObjectJsonConverter(params Type[] types) {
+            _types = types;
+        }
+
+        public override void WriteJson(JsonWriter jsonWriter, object value, JsonSerializer jsonSerializer)
+        {
+            PSObject psObj = (PSObject)value;
+            jsonWriter.WriteStartObject();
+            DefaultContractResolver contractResolver = (DefaultContractResolver)jsonSerializer.ContractResolver;
+            NamingStrategy namingStrategy = (contractResolver == null ? null : contractResolver.NamingStrategy) ?? new DefaultNamingStrategy();
+
+            psObj.Properties.Where(p => p.IsGettable).ToList().ForEach(p => {
+                    jsonWriter.WritePropertyName(namingStrategy.GetPropertyName(p.Name, false));
+                    jsonSerializer.Serialize(jsonWriter, p.Value);
+                }
+            );
+
+            jsonWriter.WriteEndObject();
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+            throw new NotImplementedException("Unnecessary because CanRead is false. The type will skip the converter.");
+        }
+
+        public override bool CanRead {
+            get { return false; }
+        }
+
+        public override bool CanConvert(Type objectType) {
+            return _types.Any(t => t == objectType);
         }
     }
 }

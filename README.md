@@ -4,7 +4,9 @@ I just want to share with you my custom PowerShell cmdlets collection, which eve
 
 ## Latest builds
 
+* [PSCmdlets_v1.1.7380.40346](PSCmdlets_v1.1.7380.40346.zip) (Fixed issues in **Convert-ToJson** and **Convert-FromJson** cmdlets)
 * [PSCmdlets_v1.1.7380.3631](builds/PSCmdlets_v1.1.7380.3631.zip)
+
 
 ## How to include custom cmdlets in your script
 
@@ -87,12 +89,22 @@ Is an **Newtonsoft JSON** based cmdlet, with all its flexibility. I have created
 
 ```PowerShell
     Convert-ToJson
-        [-JsonObject <Object>]
+        [-JsonObject <PSObject>]
 ```
 
 ### Description
 
+The **Convert-ToJson** cmdlet is able to take nested **PSCustomObject** and return indeted json string.
+
 ### Examples
+
+```PowerShell
+    PS C:\WINDOWS\system32> $pso = [pscustomobject]@{ hi = "hey" }
+    PS C:\WINDOWS\system32> $pso | Convert-ToJson
+    {
+        "hi": "hey"
+    }
+```
 
 ## Convert-FromJson
 
@@ -101,6 +113,38 @@ Is **Newtonsoft JSON** based cmdlet, with all its flexibility. I have created it
 ```PowerShell
     Convert-FromJson
         [-JsonString <String>]
+```
+
+### Description
+
+The **Convert-FromJson** cmdlet takes input **JSON string**, which could be a `JSON Object`, or a `JSON Array`. In case of `JSON Object` it returns Newtonsoft JSON.Net **JObject** type and in case of `JSON Array` **Object[]** of **JObject**.
+
+```PowerShell
+    PS C:\WINDOWS\system32> (Convert-FromJson '[{ "hi": "hey" },  { "hi": "ciao" }, { "hi": "privet" }]').GetType()
+
+    IsPublic IsSerial Name                                     BaseType
+    -------- -------- ----                                     --------
+    True     True     Object[]                                 System.Array
+
+
+    PS C:\WINDOWS\system32> (Convert-FromJson '{ "hi": "hey" }').GetType()
+    IsPublic IsSerial Name                                     BaseType
+    -------- -------- ----                                     --------
+    True     False    JObject                                  Newtonsoft.Json.Linq.JContainer
+```
+
+### Examples
+
+```PowerShell
+    # JSON Array
+    PS C:\WINDOWS\system32> Convert-FromJson '[{ "hi": "hey" },  { "hi": "ciao" }, { "hi": "privet" }]' | ForEach-Object { Write-Host $_["hi"].Value }
+    hey
+    ciao
+    privet
+
+    # JSON Object
+    PS C:\WINDOWS\system32> Write-Host (Convert-FromJson '{ "hi": "hey" }')["hi"].Value
+    hey
 ```
 
 ## New-RegValue
@@ -167,7 +211,7 @@ The **Copy-ToFolder** cmdlet had objective to provide simplier folder copy mecha
 
 ### Examples
 
-```PoweShell
+```PowerShell
     PS C:\WINDOWS\system32>  Copy-ToFolder -SourcePath C:\Folder_1 -DestDirPath C:\Folder_2 -Force
 ```
 
