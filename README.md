@@ -4,7 +4,7 @@ I just want to share with you my custom PowerShell cmdlets collection, which eve
 
 ## Latest builds
 
-* [PSCmdlets_v1.1.7380.40346](PSCmdlets_v1.1.7380.40346.zip) (Fixed issues in **Convert-ToJson** and **Convert-FromJson** cmdlets)
+* [PSCmdlets_v1.1.7380.40346](builds/PSCmdlets_v1.1.7380.40346.zip) (Fixed issues in **Convert-ToJson** and **Convert-FromJson** cmdlets)
 * [PSCmdlets_v1.1.7380.3631](builds/PSCmdlets_v1.1.7380.3631.zip)
 
 
